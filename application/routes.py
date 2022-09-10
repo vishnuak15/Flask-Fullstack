@@ -1,5 +1,6 @@
-from enum import unique
-import mimetypes
+from pickle import GET
+from application.froms import LoginForm, RegisterFrom
+from application.models import User, Course, Enrollment
 from flask import request, json, Response
 from application import app, db
 from flask import render_template
@@ -11,9 +12,10 @@ courseData = [{"courseID":"1111","title":"PHP 111","description":"Intro to PHP",
 def index():
     return render_template("index.html", index=True)
 
-@app.route('/login')
+@app.route('/login', methods=['GET','POST'])
 def login():
-    return render_template("login.html",login=True)
+    form = LoginForm()
+    return render_template("login.html",title="Login", form=form, login=True)
 
 @app.route('/courses')
 @app.route('/courses/<term>')
@@ -39,15 +41,6 @@ def api(idx=None):
     else:
         jdata = courseData[int(idx)]
     return Response(json.dumps(jdata), mimetype = "application/json")
-
-
-class User(db.Document):
-    user_id = db.IntField(unique=True)
-    first_name = db.StringField( max_length=50 )
-    last_name = db.StringField( max_length=50 )
-    email = db.StringField( max_length=30 )
-    password = db.StringField( max_length=30 )
-    
     
     
 @app.route('/user')
