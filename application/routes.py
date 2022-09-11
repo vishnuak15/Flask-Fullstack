@@ -1,7 +1,8 @@
 from pickle import GET
+from unicodedata import category
 from application.froms import LoginForm, RegisterFrom
 from application.models import User, Course, Enrollment
-from flask import request, json, Response
+from flask import request, json, Response, flash, redirect
 from application import app, db
 from flask import render_template
 
@@ -15,6 +16,12 @@ def index():
 @app.route('/login', methods=['GET','POST'])
 def login():
     form = LoginForm()
+    if form.validate_on_submit():
+        if request.form.get("email") == "vishnuak15@gmail.com":    
+            flash("You're successfully logged in", "success")
+            return redirect("/index")
+        else:
+            flash("Something went wrong","danger")
     return render_template("login.html",title="Login", form=form, login=True)
 
 @app.route('/courses')
