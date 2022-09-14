@@ -1,3 +1,4 @@
+import email
 from pickle import GET
 from unicodedata import category
 from application.froms import LoginForm, RegisterFrom
@@ -17,8 +18,13 @@ def index():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        if request.form.get("email") == "vishnuak15@gmail.com":    
-            flash("You're successfully logged in", "success")
+        email = form.email.data
+        password = form.password.data
+        
+        user = User.objects(email=email).first()
+        
+        if user and user.get_password(password): 
+            flash(f"{user.first_name}, You're successfully logged in", "success")
             return redirect("/index")
         else:
             flash("Something went wrong","danger")

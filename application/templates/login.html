@@ -1,12 +1,12 @@
-    {% extends "layout.html" %}
+{% extends "layout.html" %}
    
-    {% block content %}
-    <h1> {{ title }} </h1>
+{% block content %}
 
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <h3></h3>
-            <form name="login" action="" method="post" novalidate>
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <form name="login" action="" method="post" novalidate>
+            <fieldset class="form-group">
+                <legend>{{title}}</legend> 
                 {{ form.hidden_tag() }}
 
                 <p>
@@ -23,10 +23,12 @@
                         <span class="error-message">{{ error }}</span>
                     {% endfor %}
                 </p>
+
                 <p>
                     {{ form.submit() }}
                 </p>
-            </form>
-        </div>
+            </fieldset>
+        </form>
     </div>
- {% endblock %}
+</div>
+{% endblock %}
