@@ -1,3 +1,4 @@
+from distutils import core
 import email
 import pymongo
 from pickle import GET
@@ -43,33 +44,76 @@ def courses(term=None):
 def register():
     if session.get('username'):
         return redirect(url_for('index'))
-    try:
-        form = RegisterFrom()
-        if form.validate_on_submit():
-            user_id     = User.objects.count()
-            user_id     += 1
+    
+    form = RegisterFrom()
+    if form.validate_on_submit():
+        user_id     = User.objects.count()
+        user_id     += 1
 
-            email       = form.email.data
-            password    = form.password.data
-            first_name  = form.first_name.data
-            last_name   = form.last_name.data
+        email       = form.email.data
+        password    = form.password.data
+        first_name  = form.first_name.data
+        last_name   = form.last_name.data
 
-            user = User(user_id=user_id, email=email, first_name=first_name, last_name=last_name)
-            user.set_password(password)
-            user.save()
-            flash("You are successfully registered!","success")
-            return redirect(url_for('index'))
-        return render_template("register.html", title="Register", form=form, register=True)
-    except pymongo.errors.DuplicateKeyError:
-        return render_template("register.html", title="Register", form=form, register=True)
-        # pass
-
+        user = User(user_id=user_id, email=email, first_name=first_name, last_name=last_name)
+        user.set_password(password)
+        user.save()
+        flash("You are successfully registered!","success")
+        return redirect(url_for('index'))
+    return render_template("register.html", title="Register", form=form, register=True)
+    
 @app.route('/enrollment', methods=["GET","POST"])
 def enrollment():
-    id = request.form.get('courseID')
-    title = request.form.get('title')
-    term = request.form.get('term')
-    return render_template("enrollment.html", enrollment=True, data={"id":id,"title":title,"term":term})
+    courseID = request.form.get('courseID')
+    courseTitle = request.form.get('title')
+    user_id = session.get('user_id')
+
+    if courseID:
+        if Enrollment.objects(user_id=user_id,courseID=courseID):
+            flash(f"Oops! You are already registered in this course {courseTitle}!", "danger")
+            return redirect(url_for("courses"))
+        else:
+            Enrollment(user_id=user_id,courseID=courseID).save()
+            flash(f"You are enrolled in {courseTitle}!", "success")
+
+    classes = list( User.objects.aggregate(*[
+            {
+                '$lookup': {
+                    'from': 'enrollment', 
+                    'localField': 'user_id', 
+                    'foreignField': 'user_id', 
+                    'as': 'r1'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$r1', 
+                    'includeArrayIndex': 'r1_id', 
+                    'preserveNullAndEmptyArrays': False
+                }
+            }, {
+                '$lookup': {
+                    'from': 'course', 
+                    'localField': 'r1.courseID', 
+                    'foreignField': 'courseID', 
+                    'as': 'r2'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$r2', 
+                    'preserveNullAndEmptyArrays': False
+                }
+            }, {
+                '$match': {
+                    'user_id': user_id
+                }
+            }, {
+                '$sort': {
+                    'courseID': 1
+                }
+            }
+        ]))
+
+    return render_template("enrollment.html", enrollment=True, title="Enrollment", classes=classes)
 
 @app.route('/api/')
 @app.route('/api/<idx>')
