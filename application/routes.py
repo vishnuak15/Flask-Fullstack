@@ -42,9 +42,8 @@ def courses(term=None):
 
 @app.route("/register", methods=['POST','GET'])
 def register():
-    if session.get('username'):
-        return redirect(url_for('index'))
-    
+    # if session.get('username'):
+    #     return redirect(url_for('index'))
     form = RegisterFrom()
     if form.validate_on_submit():
         user_id     = User.objects.count()
@@ -62,8 +61,12 @@ def register():
         return redirect(url_for('index'))
     return render_template("register.html", title="Register", form=form, register=True)
     
-@app.route('/enrollment', methods=["GET","POST"])
+@app.route("/enrollment", methods=["GET","POST"])
 def enrollment():
+
+    # if not session.get('username'):
+    #     return redirect(url_for('login'))
+
     courseID = request.form.get('courseID')
     courseTitle = request.form.get('title')
     user_id = session.get('user_id')
